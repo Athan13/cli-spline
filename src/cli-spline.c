@@ -5,6 +5,8 @@
 #include <gsl/gsl_matrix.h>
 #include <ncurses.h>
 
+#include "spline-calc.h"
+
 #define INSTRUCT_HEIGHT 5
 #define MAX_PEBBLES 50
 #define MAX_ANTS 50
@@ -19,7 +21,7 @@ typedef struct Ant{
 } Ant;
 
 // Game loop for creating the path that the ants follow.
-// Returns the x-y coordinates of the pebbles.
+// Returns a vector the x-y coordinates of the pebbles.
 gsl_vector* make_path_loop(WINDOW *instruction_window, WINDOW *game_window) {
     // Create and draw instruction window
     mvwaddstr(instruction_window, 1, 1, "To move the pebble, use H (left), J (down), K (up), L (right)");
@@ -32,7 +34,9 @@ gsl_vector* make_path_loop(WINDOW *instruction_window, WINDOW *game_window) {
     // Create main window
     struct timespec remaining, rest = {0, 5E7};
 
-    gsl_vector *pebbles_xy = gsl_vector_alloc(MAX_PEBBLES * 2);
+    gsl_vector* pebbles_xy = gsl_vector_alloc(MAX_PEBBLES * 2);
+    if (pebbles_xy == NULL) return NULL;
+
     size_t num_pebbles = 0;
 
     size_t cursor_x = 1, cursor_y = 1;
@@ -43,8 +47,8 @@ gsl_vector* make_path_loop(WINDOW *instruction_window, WINDOW *game_window) {
         werase(game_window);
 
         for (size_t i = 0; i < num_pebbles; i++) {
-            size_t x = (size_t) pebbles_xy->data[2 * i];
-            size_t y = (size_t) pebbles_xy->data[2 * i + 1];
+            size_t x = (size_t) gsl_vector_get(pebbles_xy, 2 * i);
+            size_t y = (size_t) gsl_vector_get(pebbles_xy, 2 * i + 1);
             mvwaddch(game_window, y, x, PEBBLE_CH);
         }
 
@@ -59,29 +63,26 @@ gsl_vector* make_path_loop(WINDOW *instruction_window, WINDOW *game_window) {
         input_ch = wgetch(game_window);
         switch(input_ch) {
             case 'h':
-                mvwaddstr(game_window, 1, 1, "LEFT");
                 cursor_x -= (cursor_x == 1) ? 0 : 1;
                 break;
             case 'j':
-                mvwaddstr(game_window, 1, 1, "DOWN");
                 cursor_y += (cursor_y == LINES - INSTRUCT_HEIGHT - 2) ? 0 : 1;
                 break;
             case 'k':
-                mvwaddstr(game_window, 1, 1, "UP");
                 cursor_y -= (cursor_y == 1) ? 0 : 1;
                 break;
             case 'l':
-                mvwaddstr(game_window, 1, 1, "RIGHT");
                 cursor_x += (cursor_x == COLS - 2) ? 0 : 1;
                 break;
             case ' ':
                 if (num_pebbles == MAX_PEBBLES) break;
-                pebbles_xy->data[2 * num_pebbles] = cursor_x;
-                pebbles_xy->data[2 * num_pebbles + 1] = cursor_y;
+                gsl_vector_set(pebbles_xy, 2 * num_pebbles, cursor_x);
+                gsl_vector_set(pebbles_xy, 2 * num_pebbles + 1, cursor_y);
                 num_pebbles++;
                 break;
             case '\n':
                 if (num_pebbles < 2) break;
+                pebbles_xy->size = num_pebbles * 2;
                 return pebbles_xy;
             default:
                 break;
@@ -97,7 +98,6 @@ int ants_loop() {
 }
 
 int main(int argc, char** argv) {
-
     // Initialise ncurses
     initscr();
     noecho();
@@ -112,6 +112,16 @@ int main(int argc, char** argv) {
 
     // Game loop 1
     gsl_vector *pebbles_xy = make_path_loop(instruction_window, game_window);
+    if (pebbles_xy == NULL) {
+        endwin();
+        delwin(instruction_window);
+        delwin(game_window);
+
+        curs_set(2); 
+
+        fprintf(stderr, "Something went wrong in game loop 1.");
+        return 1;
+    }
 
     // Linear algebra for splines
 
