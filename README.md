@@ -45,10 +45,10 @@ The way to get around this issue is to make the *derivatives* of each of the $x_
 
 Given that we have those four conditions, we can use a cubic polynomial of the form $x_i(t) = a_i + b_i(t - i) + c_i(t - i)^2 + d_i(t - i)^3$ which gives us four unknowns (the coefficients $a_i, \ b_i, \ c_i, \ d_i$). We are able to find the coefficients as follows.
 
-The $a_i$'s are simply the $x$-coordinate of the $i$'th pebble. To find the $c_i$'s we must solve $A\bold{x} = \bold{b}$ for: 
+The $a_i$'s are simply the $x$-coordinate of the $i$'th pebble. To find the $c_i$'s we must solve $A\textbf{x} = \textbf{b}$ for: 
 ![equation](images/latex_abeq.png)
 
-where $A$ is an $n+1$ by $n+1$ matrix and $\bold{b} \in \mathbb{R}^{n+1}$ (note that this *is not* the same $\bold{b}$ that is used in the coefficients above). We set $c_i$ equal to the $i$'th entry of $\bold{x}$.
+where $A$ is an $n+1$ by $n+1$ matrix and $\textbf{b} \in \mathbb{R}^{n+1}$ (note that this *is not* the same $\textbf{b}$ that is used in the coefficients above). We set $c_i$ equal to the $i$'th entry of $\textbf{x}$.
 
 Finally, we set $d_i = \frac{c_{i+1} - c_i}{3}$ and $b_i = a_{i+1} - a_i + d_i$.
 
@@ -58,7 +58,7 @@ We store all of these into one big coefficients matrix $C_x$:
 
 We repeat the entire process for $y$ to get a $C_y$.
 
-In order to actually display a curve, we need to evaluate these polynomials at a series of points. Because $x_i(t) = a_i + b_i(t - i) + c_i(t - i)^2 + d_i(t - i)^3$, this is equivalent to evaluating the polynomial $\hat{x_i}(t) = a_i + b_it + c_it^2 + d_it^3$ at a series of points between 0 and 1, call them $t_0, \ t_1, \ ...$.
+In order to actually display a curve, we need to evaluate these polynomials at a series of points. Because $x_i(t) = a_i + b_i(t - i) + c_i(t - i)^2 + d_i(t - i)^3$, this is equivalent to evaluating the polynomial $\hat{x_i}(t) = a_i + b_it + c_it^2 + d_it^3$ at a series of points between 0 and 1, call them $t_0, t_1, ...$.
 
 We do this by constructing a matrix $T$: 
 
