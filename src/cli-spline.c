@@ -5,7 +5,7 @@
 #include <gsl/gsl_matrix.h>
 #include <ncurses.h>
 
-#include "spline-calc.h"
+// #include "spline-calc.h"
 
 #define INSTRUCT_HEIGHT 5
 #define MAX_PEBBLES 50

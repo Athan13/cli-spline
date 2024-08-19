@@ -66,7 +66,8 @@ void test_generate_A_matrix_fail() {
 void test_get_cubic_coeffs1() {
     double xs[] = {1., 1., 1., 1., 1.};
     gsl_vector_view x_coords = gsl_vector_view_array(xs, 5); 
-    gsl_matrix* gen_coeffs_m = get_cubic_coeffs(&x_coords.vector);
+    gsl_matrix* gen_coeffs_m = gsl_matrix_alloc(5, 4);
+    int result = get_cubic_coeffs(gen_coeffs_m, &x_coords.vector);
 
     double ref_coeffs[] = {
         1., 0., 0., 0.,
@@ -76,7 +77,7 @@ void test_get_cubic_coeffs1() {
     };
     gsl_matrix_view ref_coeffs_m = gsl_matrix_view_array(ref_coeffs, 4, 4);
 
-    if ( gsl_matrix_approxeq(gen_coeffs_m, &ref_coeffs_m.matrix, 1e-5) ) {
+    if ( result == 0 && gsl_matrix_approxeq(gen_coeffs_m, &ref_coeffs_m.matrix, 1e-5) ) {
         printf("TEST PASSED: test_get_cubic_coeffs1()\n");
     } else {
         printf("TEST FAILED: test_get_cubic_coeffs1(). Expected vs actual:\n");
@@ -90,7 +91,8 @@ void test_get_cubic_coeffs1() {
 void test_get_cubic_coeffs2() {
     double xs[] = {1., 3., 5., 2., 6., 0., 1., 9., 4.};
     gsl_vector_view x_coords = gsl_vector_view_array(xs, 9);
-    gsl_matrix* gen_coeffs_m = get_cubic_coeffs(&x_coords.vector);
+    gsl_matrix* gen_coeffs_m = gsl_matrix_alloc(9, 4);
+    int result = get_cubic_coeffs(gen_coeffs_m, &x_coords.vector);
 
     double ref_coeffs[] = {
         1., 1.448913843888071, 0., 0.5510861561119292,
@@ -104,7 +106,7 @@ void test_get_cubic_coeffs2() {
     };
     gsl_matrix_view ref_coeffs_m = gsl_matrix_view_array(ref_coeffs, 8, 4);
     
-    if ( gsl_matrix_approxeq(gen_coeffs_m, &ref_coeffs_m.matrix, 1e-5) ) {
+    if ( result == 0 && gsl_matrix_approxeq(gen_coeffs_m, &ref_coeffs_m.matrix, 1e-5) ) {
         printf("TEST PASSED: test_get_cubic_coeffs2()\n");
     } else {
         printf("TEST FAILED: test_get_cubic_coeffs2(). Expected vs actual:\n");
@@ -118,15 +120,17 @@ void test_get_cubic_coeffs2() {
 void test_get_cubic_coeffs_fail() {
     double xs[] = {1., 3.};
     gsl_vector_view x_coords = gsl_vector_view_array(xs, 2);
-    gsl_matrix* gen_coeffs_m = get_cubic_coeffs(&x_coords.vector);
+    gsl_matrix* gen_coeffs_m = gsl_matrix_alloc(2, 4);
+    int result = get_cubic_coeffs(gen_coeffs_m, &x_coords.vector);
 
-    if (gen_coeffs_m == NULL) {
+    if (result == 1) {
         printf("TEST PASSED: test_generate_A_matrix_fail().\n");
     } else {
         printf("TEST FAILED: test_generate_A_matrix_fail() - a_matrix should be NULL but instead was:\n");
         print_matrix(gen_coeffs_m);
-        gsl_matrix_free(gen_coeffs_m);
     }
+
+    gsl_matrix_free(gen_coeffs_m);
 }
 
 int main(int argc, char** argv) {

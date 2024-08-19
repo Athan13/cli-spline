@@ -5,8 +5,8 @@
 
 gsl_matrix* generate_A_matrix(size_t n); 
 
-gsl_matrix* get_cubic_coeffs(const gsl_vector* pebbles_coord);
+int get_cubic_coeffs(gsl_matrix* cubics_coeffs, const gsl_vector* pebbles_coord);
 
-gsl_matrix* get_path(gsl_vector* pebbles_xy, size_t total_x, size_t total_y);
+int create_path(gsl_matrix* path_matrix, const gsl_vector* pebbles_xy, size_t t_sample_resolution);
 
 #endif
