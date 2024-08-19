@@ -4,8 +4,7 @@
 #include <assert.h>
 
 /*
-    Generates matrix A (see README/How It Works). Because of how we defined the t's, we set
-    all h_0 = h_1 = ... = h_{n - 1} = 1.
+    Generates matrix A (see README/How It Works).
 */
 gsl_matrix* generate_A_matrix(size_t n) {
     // Need at least three points for cubic spline interpolation
@@ -91,29 +90,6 @@ int get_cubic_coeffs(gsl_matrix* cubics_coeffs, const gsl_vector* pebbles_coord)
 }
 
 /*
-    Evaluates a cubic spline at `t_sample_resolution` places. Result is a matrix that describes
-    the path of the spline in row major order.
-*/
-int spline_eval(gsl_matrix* eval_matrix, const gsl_matrix* cubics_coeffs, size_t t_sample_resolution) {
-    gsl_matrix* t_matrix = gsl_matrix_alloc(4, t_sample_resolution);
-    gsl_vector_view row0 = gsl_matrix_row(t_matrix, 0);
-    gsl_vector_set_all(&row0.vector, 1);
-
-    double t;
-    for (size_t j = 0; j < t_sample_resolution; j++) {
-        t = (double) j / t_sample_resolution;
-        gsl_matrix_set(t_matrix, 1, j, t);
-        gsl_matrix_set(t_matrix, 2, j, t * t);
-        gsl_matrix_set(t_matrix, 3, j, t * t * t);
-    }
-
-    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1., cubics_coeffs, t_matrix, 0., eval_matrix);
-
-    gsl_matrix_free(t_matrix);
-    return 0;
-}
-
-/*
     Takes in a series of pebbles and constructs a path for ants to follow.
 
     Pebbles are represented as xy-coords in pebbles_xy, `t_sample_resolution` is the
@@ -143,11 +119,25 @@ int create_path(gsl_matrix* path_matrix, const gsl_vector* pebbles_xy, size_t t_
     gsl_matrix_view x_path = gsl_matrix_submatrix(path_matrix, 0, 0, x_coeffs->size1, t_sample_resolution);
     gsl_matrix_view y_path = gsl_matrix_submatrix(path_matrix, x_coeffs->size1, 0, x_coeffs->size1, t_sample_resolution);
 
-    spline_eval(&x_path.matrix, x_coeffs, t_sample_resolution);
-    spline_eval(&y_path.matrix, y_coeffs, t_sample_resolution);
+    gsl_matrix* t_matrix = gsl_matrix_alloc(4, t_sample_resolution);
+    
+    gsl_vector_view row0 = gsl_matrix_row(t_matrix, 0);
+    gsl_vector_set_all(&row0.vector, 1);
+
+    double t;
+    for (size_t j = 0; j < t_sample_resolution; j++) {
+        t = (double) j / t_sample_resolution;
+        gsl_matrix_set(t_matrix, 1, j, t);
+        gsl_matrix_set(t_matrix, 2, j, t * t);
+        gsl_matrix_set(t_matrix, 3, j, t * t * t);
+    }
+
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1., x_coeffs, t_matrix, 0., &x_path.matrix);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1., y_coeffs, t_matrix, 0., &y_path.matrix);
 
     gsl_matrix_free(x_coeffs);
     gsl_matrix_free(y_coeffs);
+    gsl_matrix_free(t_matrix);
 
     return 0;
 }
