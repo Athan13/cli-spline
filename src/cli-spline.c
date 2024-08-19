@@ -128,8 +128,8 @@ int ants_loop (WINDOW* instruction_window, WINDOW* game_window,
         for (size_t i = 0; i < num_ants; i++) {
             ant_i = (first_ant_index + i) % MAX_ANTS;
             ant_t = ants[ant_i];
-            ant_x = (size_t) gsl_vector_get(&x_path.vector, ant_t) % (COLS);
-            ant_y = (size_t) gsl_vector_get(&y_path.vector, ant_t) % (LINES - INSTRUCT_HEIGHT);
+            ant_x = (size_t) gsl_vector_get(&x_path.vector, ant_t);
+            ant_y = (size_t) gsl_vector_get(&y_path.vector, ant_t);
             mvwaddch(game_window, ant_y, ant_x, ANT_CH);
 
             ants[ant_i]++;
@@ -181,7 +181,6 @@ int main(int argc, char** argv) {
     nodelay(game_window, true);
 
     double clock_ns = 2E7;
-    size_t t_sample_resolution = 50;
 
     // Game loop 1
     gsl_vector* pebbles_xy = make_path_loop(instruction_window, game_window, clock_ns);
@@ -197,6 +196,7 @@ int main(int argc, char** argv) {
     }
 
     // Linear algebra for splines
+    size_t t_sample_resolution = 50;
     gsl_matrix* path_matrix = gsl_matrix_alloc(pebbles_xy->size - 2, t_sample_resolution);
     create_path(path_matrix, pebbles_xy, t_sample_resolution);
 

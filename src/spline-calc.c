@@ -46,8 +46,6 @@ int get_cubic_coeffs(gsl_matrix* cubics_coeffs, const gsl_vector* pebbles_coord)
 
     // Find c's (coefficient of t^2) by solving relevant Ax = b using LU decomposition
     gsl_matrix* a_matrix = generate_A_matrix(num_pebbles);
-    if (a_matrix == NULL) return 1;
-
     gsl_vector* b_vector = gsl_vector_alloc(num_pebbles);
     double prev_a, curr_a, next_a;
     for (size_t i = 1; i < num_pebbles - 1; i++) {
@@ -114,8 +112,8 @@ int create_path(gsl_matrix* path_matrix, const gsl_vector* pebbles_xy, size_t t_
     get_cubic_coeffs(x_coeffs, &pebbles_x_view.vector);
     get_cubic_coeffs(y_coeffs, &pebbles_y_view.vector);
 
-    // The top half of the matrix spline_eval_m becomes the x coords of the path, while
-    // the bottom half becomes the y coords (both in row major order)
+    // The top half of the matrix spline_eval_m becomes the x coords of the path (P_x), while
+    // the bottom half becomes the y coords (P_y) (both in row major order)
     gsl_matrix_view x_path = gsl_matrix_submatrix(path_matrix, 0, 0, x_coeffs->size1, t_sample_resolution);
     gsl_matrix_view y_path = gsl_matrix_submatrix(path_matrix, x_coeffs->size1, 0, x_coeffs->size1, t_sample_resolution);
 
@@ -132,6 +130,7 @@ int create_path(gsl_matrix* path_matrix, const gsl_vector* pebbles_xy, size_t t_
         gsl_matrix_set(t_matrix, 3, j, t * t * t);
     }
 
+    // P_x = C_xT, P_y = C_yT
     gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1., x_coeffs, t_matrix, 0., &x_path.matrix);
     gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1., y_coeffs, t_matrix, 0., &y_path.matrix);
 
