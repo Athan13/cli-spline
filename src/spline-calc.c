@@ -99,7 +99,7 @@ int get_cubic_coeffs(gsl_matrix* cubics_coeffs, const gsl_vector* pebbles_coord)
 int create_path(gsl_matrix* path_matrix, const gsl_vector* pebbles_xy, size_t t_sample_resolution) {
     // Check dimensions
     assert(path_matrix->size1 == pebbles_xy->size - 2);
-    assert(path_matrix->size2 = t_sample_resolution);
+    assert(path_matrix->size2 == t_sample_resolution);
     
     size_t num_pebbles = pebbles_xy->size / 2;
     gsl_vector_const_view pebbles_x_view = gsl_vector_const_subvector_with_stride(pebbles_xy, 0, 2, num_pebbles);
