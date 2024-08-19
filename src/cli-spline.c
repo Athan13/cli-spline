@@ -8,22 +8,12 @@
 
 #include "spline-calc.h"
 
-#define INSTRUCT_HEIGHT 5
+#define INSTRUCT_HEIGHT 6
 #define MAX_PEBBLES 100
 #define MAX_ANTS 100
 
 #define ANT_CH 'O'
 #define PEBBLE_CH 'X'
-
-void _print_matrix(const gsl_matrix* a) {
-    for (int i = 0; i < a->size1; i++) {
-        for (int j = 0; j < a->size2; j++) {
-            printf("%f ", gsl_matrix_get(a, i, j));
-        }
-        printf("\n");
-    }
-    printf("\n");
-}
 
 // Game loop for creating the path that the ants follow.
 // Returns a vector the x-y coordinates of the pebbles.
@@ -31,7 +21,8 @@ gsl_vector* make_path_loop(WINDOW* instruction_window, WINDOW* game_window, doub
     // Create and draw instruction window
     mvwaddstr(instruction_window, 1, 1, "To move the pebble, use H (left), J (down), K (up), L (right)");
     mvwaddstr(instruction_window, 2, 1, "Press SPACE to drop the pebble, and to get a new one.");
-    mvwaddstr(instruction_window, 3, 1, "Press ENTER when you're done dropping pebbles.");
+    mvwaddstr(instruction_window, 3, 1, "Press ENTER when you're done dropping pebbles (there must be at least three pebbles).");
+    mvwaddstr(instruction_window, 4, 1, "Press ESC to exit the game.");
 
     box(instruction_window, 0, 0);
     wrefresh(instruction_window);
@@ -84,11 +75,11 @@ gsl_vector* make_path_loop(WINDOW* instruction_window, WINDOW* game_window, doub
                 num_pebbles++;
                 break;
             case '\n':
-                if (num_pebbles < 2) break;
+                if (num_pebbles < 3) break;
                 pebbles_xy->size = num_pebbles * 2;
                 return pebbles_xy;
-            default:
-                break;
+            case 27:  // escape
+                return NULL;
         } 
     }
 
@@ -103,7 +94,8 @@ int ants_loop (WINDOW* instruction_window, WINDOW* game_window,
     werase(instruction_window);
     mvwaddstr(instruction_window, 1, 1, "Press SPACE to send another ant down the path.");
     mvwaddstr(instruction_window, 2, 1, "Press K to increase and J to decrease the speed of the ants.");
-    mvwaddstr(instruction_window, 3, 1, "Pree ESC when you want to quit the game.");
+    mvwaddstr(instruction_window, 3, 1, "Press ESC to exit the game.");
+    mvwaddstr(instruction_window, 4, 1, "Look at those ants go!");
 
     box(instruction_window, 0, 0);
     wrefresh(instruction_window);
@@ -196,12 +188,12 @@ int main(int argc, char** argv) {
     if (pebbles_xy == NULL) {
         endwin();
         delwin(instruction_window);
-        delwin(game_window);
+        delwin(game_window); 
 
         curs_set(2);
-
-        fprintf(stderr, "Something went wrong in game loop 1.");
-        return 1;
+        printf("Thanks for playing!\n");
+        system("stty sane"); 
+        return 0;
     }
 
     // Linear algebra for splines
