@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
 
@@ -8,8 +9,8 @@
 #include "spline-calc.h"
 
 #define INSTRUCT_HEIGHT 5
-#define MAX_PEBBLES 50
-#define MAX_ANTS 50
+#define MAX_PEBBLES 100
+#define MAX_ANTS 100
 
 #define ANT_CH 'O'
 #define PEBBLE_CH 'X'
@@ -118,7 +119,6 @@ int ants_loop (WINDOW* instruction_window, WINDOW* game_window,
     gsl_vector_view x_path = gsl_vector_view_array(path_matrix->data, path_length);
     gsl_vector_view y_path = gsl_vector_view_array(path_matrix->data + path_length, path_length);
 
-    struct timespec remaining, rest = {0, clock_ns};
     int input_ch;
 
     while(1) {       
@@ -136,8 +136,8 @@ int ants_loop (WINDOW* instruction_window, WINDOW* game_window,
         for (size_t i = 0; i < num_ants; i++) {
             ant_i = (first_ant_index + i) % MAX_ANTS;
             ant_t = ants[ant_i];
-            ant_x = gsl_vector_get(&x_path.vector, ant_t);
-            ant_y = gsl_vector_get(&y_path.vector, ant_t);
+            ant_x = (size_t) gsl_vector_get(&x_path.vector, ant_t) % (COLS);
+            ant_y = (size_t) gsl_vector_get(&y_path.vector, ant_t) % (LINES - INSTRUCT_HEIGHT);
             mvwaddch(game_window, ant_y, ant_x, ANT_CH);
 
             ants[ant_i]++;
@@ -151,6 +151,7 @@ int ants_loop (WINDOW* instruction_window, WINDOW* game_window,
         box(game_window, 0, 0);
 
         wrefresh(game_window);
+        struct timespec remaining, rest = {0, clock_ns};
         nanosleep(&rest, &remaining);
 
         // Get keyboard input
@@ -162,6 +163,12 @@ int ants_loop (WINDOW* instruction_window, WINDOW* game_window,
                 break;
             case 27:  // escape key
                 return 0;
+            case 'k':
+                clock_ns /= 1.5;
+                break;
+            case 'j':
+                clock_ns *= 1.5;
+                break;
         }
     }
 
@@ -214,8 +221,9 @@ int main(int argc, char** argv) {
     // Cleanup - vectors
     gsl_vector_free(pebbles_xy);
     gsl_matrix_free(path_matrix);
-
+    
     printf("Thanks for playing!\n");
+    system("stty sane");  // ncurses sometimes messes with alignment of terminal
 
     return 0;
 }
