@@ -1,6 +1,8 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_linalg.h>
 
+#include <assert.h>
+
 /*
     Generates matrix A (see README/How It Works). Because of how we defined the t's, we set
     all h_0 = h_1 = ... = h_{n - 1} = 1.
@@ -32,6 +34,10 @@ gsl_matrix* generate_A_matrix(size_t n) {
     `cubics_coeffs` must have dimensions size1 = pebbles_coord->size, size2 = 4.
 */
 int get_cubic_coeffs(gsl_matrix* cubics_coeffs, const gsl_vector* pebbles_coord) {
+    // Check that matrix dimensions match.
+    assert(cubics_coeffs->size1 == pebbles_coord->size);
+    assert(cubics_coeffs->size2 == 4);
+
     size_t num_pebbles = pebbles_coord->size;
 
     // Find a's (constant of cubic equation) --> copy pebbles_coord into first column
