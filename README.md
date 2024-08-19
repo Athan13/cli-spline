@@ -12,7 +12,7 @@ $ bash build.sh
 
 You can now run the game with `./cli-spline`.
 
-Dependencies are [ncurses](https://invisible-island.net/ncurses/announce.html) (usually present on a system by default) and [GSL](https://www.gnu.org/software/gsl/). `build.sh` is written for gcc.
+Dependencies are [ncurses](https://invisible-island.net/ncurses/announce.html) and [GSL](https://www.gnu.org/software/gsl/). `build.sh` is written for gcc.
 
 ## How To Play
 

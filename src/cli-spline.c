@@ -35,10 +35,8 @@ gsl_vector* make_path_loop(WINDOW *instruction_window, WINDOW *game_window) {
     struct timespec remaining, rest = {0, 5E7};
 
     gsl_vector* pebbles_xy = gsl_vector_alloc(MAX_PEBBLES * 2);
-    if (pebbles_xy == NULL) return NULL;
 
     size_t num_pebbles = 0;
-
     size_t cursor_x = 1, cursor_y = 1;
     int input_ch;
 
