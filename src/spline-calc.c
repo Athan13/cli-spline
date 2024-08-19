@@ -94,13 +94,14 @@ int get_cubic_coeffs(gsl_matrix* cubics_coeffs, const gsl_vector* pebbles_coord)
     Evaluates a cubic spline at `t_sample_resolution` places. Result is a matrix that describes
     the path of the spline in row major order.
 */
-int spline_eval(const gsl_matrix* cubics_coeffs, size_t t_sample_resolution, gsl_matrix* eval_matrix) {
+int spline_eval(gsl_matrix* eval_matrix, const gsl_matrix* cubics_coeffs, size_t t_sample_resolution) {
     gsl_matrix* t_matrix = gsl_matrix_alloc(4, t_sample_resolution);
     gsl_vector_view row0 = gsl_matrix_row(t_matrix, 0);
     gsl_vector_set_all(&row0.vector, 1);
 
+    double t;
     for (size_t j = 0; j < t_sample_resolution; j++) {
-        double t = j / t_sample_resolution;
+        t = (double) j / t_sample_resolution;
         gsl_matrix_set(t_matrix, 1, j, t);
         gsl_matrix_set(t_matrix, 2, j, t * t);
         gsl_matrix_set(t_matrix, 3, j, t * t * t);
@@ -122,10 +123,15 @@ int spline_eval(const gsl_matrix* cubics_coeffs, size_t t_sample_resolution, gsl
     size2 = t_sample_resolution.
 */
 int create_path(gsl_matrix* path_matrix, const gsl_vector* pebbles_xy, size_t t_sample_resolution) {
+    // Check dimensions
+    assert(path_matrix->size1 == pebbles_xy->size - 2);
+    assert(path_matrix->size2 = t_sample_resolution);
+    
     size_t num_pebbles = pebbles_xy->size / 2;
     gsl_vector_const_view pebbles_x_view = gsl_vector_const_subvector_with_stride(pebbles_xy, 0, 2, num_pebbles);
     gsl_vector_const_view pebbles_y_view = gsl_vector_const_subvector_with_stride(pebbles_xy, 1, 2, num_pebbles);
 
+    // Get coefficients for x_i(t) and y_i(t)
     gsl_matrix* x_coeffs = gsl_matrix_alloc(num_pebbles, 4);
     gsl_matrix* y_coeffs = gsl_matrix_alloc(num_pebbles, 4);
 
@@ -137,8 +143,8 @@ int create_path(gsl_matrix* path_matrix, const gsl_vector* pebbles_xy, size_t t_
     gsl_matrix_view x_path = gsl_matrix_submatrix(path_matrix, 0, 0, x_coeffs->size1, t_sample_resolution);
     gsl_matrix_view y_path = gsl_matrix_submatrix(path_matrix, x_coeffs->size1, 0, x_coeffs->size1, t_sample_resolution);
 
-    spline_eval(x_coeffs, t_sample_resolution, &x_path.matrix);
-    spline_eval(y_coeffs, t_sample_resolution, &y_path.matrix);
+    spline_eval(&x_path.matrix, x_coeffs, t_sample_resolution);
+    spline_eval(&y_path.matrix, y_coeffs, t_sample_resolution);
 
     gsl_matrix_free(x_coeffs);
     gsl_matrix_free(y_coeffs);
