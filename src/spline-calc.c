@@ -8,8 +8,8 @@
 */
 gsl_matrix* generate_A_matrix(size_t n) {
     // Need at least three points for cubic spline interpolation
-    if (n <= 2) {
-        fprintf(stderr, "Number of points must be greater than two (generate_A_matrix)\n");
+    if (n < 3) {
+        fprintf(stderr, "At least three points needed for a_matrix (generate_A_matrix).\n");
         return NULL;
     }
 
@@ -42,10 +42,12 @@ int get_cubic_coeffs(gsl_matrix* cubics_coeffs, const gsl_vector* pebbles_coord)
     // Find a's (constant of cubic equation) --> copy pebbles_coord into first column
     // of coefficients matrix
     gsl_vector_view col0 = gsl_matrix_column(cubics_coeffs, 0);
-    gsl_vector_add(&col0.vector, pebbles_coord);
+    gsl_vector_memcpy(&col0.vector, pebbles_coord);
 
     // Find c's (coefficient of t^2) by solving relevant Ax = b using LU decomposition
     gsl_matrix* a_matrix = generate_A_matrix(num_pebbles);
+    if (a_matrix == NULL) return 1;
+
     gsl_vector* b_vector = gsl_vector_alloc(num_pebbles);
     double prev_a, curr_a, next_a;
     for (size_t i = 1; i < num_pebbles - 1; i++) {

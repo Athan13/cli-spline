@@ -79,6 +79,7 @@ gsl_vector* make_path_loop(WINDOW* instruction_window, WINDOW* game_window, doub
                 pebbles_xy->size = num_pebbles * 2;
                 return pebbles_xy;
             case 27:  // escape
+                gsl_vector_free(pebbles_xy);
                 return NULL;
         } 
     }
@@ -184,16 +185,7 @@ int main(int argc, char** argv) {
 
     // Game loop 1
     gsl_vector* pebbles_xy = make_path_loop(instruction_window, game_window, clock_ns);
-    if (pebbles_xy == NULL) {
-        endwin();
-        delwin(instruction_window);
-        delwin(game_window); 
-
-        curs_set(2);
-        printf("Thanks for playing!\n");
-        system("stty sane"); 
-        return 0;
-    }
+    if (pebbles_xy == NULL) goto cleanup;
 
     // Linear algebra for splines
     size_t t_sample_resolution = 50;
@@ -203,16 +195,17 @@ int main(int argc, char** argv) {
     // Game loop 2 (main game loop)
     ants_loop(instruction_window, game_window, pebbles_xy, path_matrix, clock_ns);
 
+    // Cleanup - vectors
+    gsl_vector_free(pebbles_xy);
+    gsl_matrix_free(path_matrix);
+
+cleanup:
     // Cleanup - ncurses
     endwin();
     delwin(instruction_window);
     delwin(game_window);
 
     curs_set(2);
-
-    // Cleanup - vectors
-    gsl_vector_free(pebbles_xy);
-    gsl_matrix_free(path_matrix);
     
     printf("Thanks for playing!\n");
     system("stty sane");  // ncurses sometimes messes with alignment of terminal
