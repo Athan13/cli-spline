@@ -17,7 +17,7 @@
 
 // Game loop for creating the path that the ants follow.
 // Returns a vector the x-y coordinates of the pebbles.
-gsl_vector* make_path_loop(WINDOW* instruction_window, WINDOW* game_window, double clock_ns) {
+static gsl_vector* make_path_loop(WINDOW* instruction_window, WINDOW* game_window, double clock_ns) {
     // Create and draw instruction window
     mvwaddstr(instruction_window, 1, 1, "To move the pebble, use H (left), J (down), K (up), L (right)");
     mvwaddstr(instruction_window, 2, 1, "Press SPACE to drop the pebble, and to get a new one.");
@@ -36,7 +36,7 @@ gsl_vector* make_path_loop(WINDOW* instruction_window, WINDOW* game_window, doub
     size_t cursor_x = 1, cursor_y = 1;
     int input_ch;
 
-    while(1) {       
+    while(true) {       
         // Draw game window
         werase(game_window);
 
@@ -88,7 +88,7 @@ gsl_vector* make_path_loop(WINDOW* instruction_window, WINDOW* game_window, doub
 }
 
 // Game loop for the main part of the game: seeing the ants follow the path.
-int ants_loop (WINDOW* instruction_window, WINDOW* game_window, 
+static int ants_loop (WINDOW* instruction_window, WINDOW* game_window, 
                 const gsl_vector* pebbles_xy, const gsl_matrix* path_matrix, double clock_ns) {
 
     // Create and draw instruction window
@@ -106,31 +106,29 @@ int ants_loop (WINDOW* instruction_window, WINDOW* game_window,
     size_t first_ant_index = 0;
     size_t num_ants = 1;
 
-    size_t num_pebbles = pebbles_xy->size / 2;
-    size_t path_length = path_matrix->size1 * path_matrix->size2 / 2;
+    const size_t num_pebbles = pebbles_xy->size / 2;
+    const size_t path_length = path_matrix->size1 * path_matrix->size2 / 2;
 
-    gsl_vector_view x_path = gsl_vector_view_array(path_matrix->data, path_length);
-    gsl_vector_view y_path = gsl_vector_view_array(path_matrix->data + path_length, path_length);
+    gsl_vector_const_view x_path = gsl_vector_const_view_array(path_matrix->data, path_length);
+    gsl_vector_const_view y_path = gsl_vector_const_view_array(path_matrix->data + path_length, path_length);
 
     int input_ch;
 
-    while(1) {       
+    while(true) {       
         // Draw game window
         werase(game_window);
 
-        size_t x, y;
         for (size_t i = 0; i < num_pebbles; i++) {
-            x = (size_t) gsl_vector_get(pebbles_xy, 2 * i);
-            y = (size_t) gsl_vector_get(pebbles_xy, 2 * i + 1);
+            const size_t x = (size_t) gsl_vector_get(pebbles_xy, 2 * i);
+            const size_t y = (size_t) gsl_vector_get(pebbles_xy, 2 * i + 1);
             mvwaddch(game_window, y, x, PEBBLE_CH);
         }
 
-        size_t ant_i, ant_t, ant_x, ant_y;
         for (size_t i = 0; i < num_ants; i++) {
-            ant_i = (first_ant_index + i) % MAX_ANTS;
-            ant_t = ants[ant_i];
-            ant_x = (size_t) gsl_vector_get(&x_path.vector, ant_t);
-            ant_y = (size_t) gsl_vector_get(&y_path.vector, ant_t);
+            const size_t ant_i = (first_ant_index + i) % MAX_ANTS;
+            const size_t ant_t = ants[ant_i];
+            const size_t ant_x = (size_t) gsl_vector_get(&x_path.vector, ant_t);
+            const size_t ant_y = (size_t) gsl_vector_get(&y_path.vector, ant_t);
             mvwaddch(game_window, ant_y, ant_x, ANT_CH);
 
             ants[ant_i]++;
@@ -188,7 +186,7 @@ int main(int argc, char** argv) {
     if (pebbles_xy == NULL) goto cleanup;
 
     // Linear algebra for splines
-    size_t t_sample_resolution = 50;
+    const size_t t_sample_resolution = 50;
     gsl_matrix* path_matrix = gsl_matrix_alloc(pebbles_xy->size - 2, t_sample_resolution);
     create_path(path_matrix, pebbles_xy, t_sample_resolution);
 

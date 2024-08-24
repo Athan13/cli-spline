@@ -6,10 +6,9 @@
 /*
     Generates matrix A (see README/How It Works).
 */
-gsl_matrix* generate_A_matrix(size_t n) {
-    // Need at least three points for cubic spline interpolation
+gsl_matrix* generate_A_matrix(const size_t n) {
     if (n < 3) {
-        fprintf(stderr, "At least three points needed for a_matrix (generate_A_matrix).\n");
+        fprintf(stderr, "At least three points needed for cubic spline interpolation (generate_A_matrix). %zu where provided.\n", n);
         return NULL;
     }
 
@@ -37,7 +36,7 @@ int get_cubic_coeffs(gsl_matrix* cubics_coeffs, const gsl_vector* pebbles_coord)
     assert(cubics_coeffs->size1 == pebbles_coord->size);
     assert(cubics_coeffs->size2 == 4);
 
-    size_t num_pebbles = pebbles_coord->size;
+    const size_t num_pebbles = pebbles_coord->size;
 
     // Find a's (constant of cubic equation) --> copy pebbles_coord into first column
     // of coefficients matrix
@@ -98,12 +97,12 @@ int get_cubic_coeffs(gsl_matrix* cubics_coeffs, const gsl_vector* pebbles_coord)
     Result is stored in `path_matrix`, which must be of dimensions size1 = pebbles_xy->size - 2 and
     size2 = t_sample_resolution.
 */
-int create_path(gsl_matrix* path_matrix, const gsl_vector* pebbles_xy, size_t t_sample_resolution) {
+void create_path(gsl_matrix* path_matrix, const gsl_vector* pebbles_xy, const size_t t_sample_resolution) {
     // Check dimensions
     assert(path_matrix->size1 == pebbles_xy->size - 2);
     assert(path_matrix->size2 == t_sample_resolution);
     
-    size_t num_pebbles = pebbles_xy->size / 2;
+    const size_t num_pebbles = pebbles_xy->size / 2;
     gsl_vector_const_view pebbles_x_view = gsl_vector_const_subvector_with_stride(pebbles_xy, 0, 2, num_pebbles);
     gsl_vector_const_view pebbles_y_view = gsl_vector_const_subvector_with_stride(pebbles_xy, 1, 2, num_pebbles);
 
@@ -139,6 +138,4 @@ int create_path(gsl_matrix* path_matrix, const gsl_vector* pebbles_xy, size_t t_
     gsl_matrix_free(x_coeffs);
     gsl_matrix_free(y_coeffs);
     gsl_matrix_free(t_matrix);
-
-    return 0;
 }
